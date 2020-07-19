@@ -3,22 +3,24 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/karngyan/getx/app/clients"
-	"log"
-	"net/http"
-
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/karngyan/getx/app/clients"
 	"github.com/karngyan/getx/app/exchanges"
 	"github.com/karngyan/getx/app/models"
+	"github.com/karngyan/getx/app/utils"
+	"log"
+	"net/http"
 )
 
 type PageSourceController struct{}
 
+// constructor
 func NewPageSourceController() *PageSourceController {
 	return &PageSourceController{}
 }
 
+// Spawns a go routine to fetch html of given url and dumps it to a file
 func (sc *PageSourceController) GeneratePageSource(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	r := exchanges.GeneratePageSourceRequest{}
 	fileClient := clients.NewFileClient()
@@ -41,25 +43,24 @@ func (sc *PageSourceController) GeneratePageSource(w http.ResponseWriter, req *h
 		RetyLimit: r.RetryLimit,
 	}
 
-	// fetching html bytes
-	htmlBytes, err := networkClient.GetHtmlBytes(ps.Uri)
-	if err != nil {
-		// TODO: go routine for retries on the basis of ps.retryLimit
-		// TODO: create empty html file instead and update later
-		log.Println("Network Client failed to get html bytes: ", ps.Uri)
-	}
+	filePath := utils.GetFilePath(ps.Id)
 
-	// creating file
-	_, err = fileClient.CreateFile(ps.Id+".html", htmlBytes)
-	if err != nil {
-		// 5xx
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "File Couldn't be created%s\n", err)
-		return
-	}
+	// spawn a go routine to fetch the html
+	go func() {
+		// blocking call based on retries
+		htmlBytes, err := networkClient.GetHtmlBytes(ps.Uri, ps.RetyLimit)
+		if err != nil {
+			log.Println("Network client failed to get html bytes: ",
+				ps.Uri)
+		}
 
-	// file creation success
-	ps.SourceUri = "files/" + ps.Id + ".html"
+		if _, err = fileClient.SaveFile(filePath, htmlBytes); err != nil {
+			log.Println("Save File failed for ", ps.Uri)
+		}
+	}()
+
+	// expected file path
+	ps.SourceUri = utils.GetSourceUri(ps.Id)
 	psJson, err := json.Marshal(ps)
 	if err != nil {
 		log.Println("JSON Marshal failed: ", err)
@@ -67,7 +68,7 @@ func (sc *PageSourceController) GeneratePageSource(w http.ResponseWriter, req *h
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Location", ps.SourceUri)
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "%s\n", psJson)
 
 }
