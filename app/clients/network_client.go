@@ -40,10 +40,10 @@ func (nc *NetworkClient) GetHtmlBytes(uri string, retryLimit int) ([]byte, error
 
 	var response *http.Response
 	log.Println("Initial GET: ", uri)
-	performRequest(client,
-		req, retriesDoneChannel, &retryLeft, &response)
+	performInitialRequest(client, req, &response)
 
 	if response == nil {
+		// initiate retries
 		go func() {
 			for {
 				select {
@@ -51,17 +51,19 @@ func (nc *NetworkClient) GetHtmlBytes(uri string, retryLimit int) ([]byte, error
 					responseReceivedChannel <- true
 					return
 				case t := <-ticker.C:
-					log.Println("GET:", uri, t)
+					log.Println("GET:", uri, t, retryLeft)
 					// perform request
+					retryLeft -= 1
 					go performRequest(client,
 						req, retriesDoneChannel, &retryLeft, &response)
 				}
 			}
 		}()
 	} else {
-		responseReceivedChannel <- true
+		go func() {
+			responseReceivedChannel <- true
+		}()
 	}
-
 	// wait till response is received
 	<-responseReceivedChannel
 	ticker.Stop()
@@ -88,6 +90,7 @@ func performRequest(client *http.Client,
 	retriesDoneChannel chan bool,
 	retryLeft *int,
 	response **http.Response) {
+
 	defer catchPanic("performRequest()")
 
 	resp, err := client.Do(request)
@@ -95,7 +98,22 @@ func performRequest(client *http.Client,
 		retriesDoneChannel <- true
 	}
 
-	*retryLeft -= 1
+	*response = resp
+
+}
+
+// Perform the initial request
+func performInitialRequest(client *http.Client,
+	request *http.Request,
+	response **http.Response) {
+
+	defer catchPanic("performRequest()")
+
+	resp, err := client.Do(request)
+	if err != nil {
+		log.Println("Initial Request Failed")
+	}
+
 	*response = resp
 
 }

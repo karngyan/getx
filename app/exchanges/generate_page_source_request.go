@@ -20,7 +20,7 @@ func (r *GeneratePageSourceRequest) IsValid() (bool, error) {
 		return false, fmt.Errorf("bad request: retry limit too high")
 	}
 
-	if r.RetryLimit == 0 {
+	if r.RetryLimit <= 0 {
 		r.RetryLimit = models.DefaultRetryLimit
 	}
 
