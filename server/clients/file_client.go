@@ -11,7 +11,7 @@ func NewFileClient() *FileClient {
 	return &FileClient{}
 }
 
-// creates/updates filePath with fileContent at app/files/*filepath
+// creates/updates filePath with fileContent at server/files/*filepath
 // returns
 //  - true, nil if file created
 //  - false, error if not

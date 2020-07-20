@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/karngyan/getx/app/clients"
-	"github.com/karngyan/getx/app/exchanges"
-	"github.com/karngyan/getx/app/models"
-	"github.com/karngyan/getx/app/utils"
+	"github.com/karngyan/getx/server/clients"
+	"github.com/karngyan/getx/server/exchanges"
+	"github.com/karngyan/getx/server/models"
+	"github.com/karngyan/getx/server/utils"
 	"log"
 	"net/http"
 )
@@ -38,9 +38,9 @@ func (sc *PageSourceController) GeneratePageSource(w http.ResponseWriter, req *h
 	id, _ := uuid.NewUUID()
 
 	ps := models.PageSource{
-		Id:        id.String(),
-		Uri:       r.Uri,
-		RetyLimit: r.RetryLimit,
+		Id:         id.String(),
+		Uri:        r.Uri,
+		RetryLimit: r.RetryLimit,
 	}
 
 	filePath := utils.GetFilePath(ps.Id)
@@ -48,7 +48,7 @@ func (sc *PageSourceController) GeneratePageSource(w http.ResponseWriter, req *h
 	// spawn a go routine to fetch the html
 	go func() {
 		// blocking call based on retries
-		htmlBytes, err := networkClient.GetHtmlBytes(ps.Uri, ps.RetyLimit)
+		htmlBytes, err := networkClient.GetHtmlBytes(ps.Uri, ps.RetryLimit)
 		if err != nil {
 			log.Println("Network client failed to get html bytes: ",
 				ps.Uri)
@@ -66,8 +66,8 @@ func (sc *PageSourceController) GeneratePageSource(w http.ResponseWriter, req *h
 		log.Println("JSON Marshal failed: ", err)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Location", ps.SourceUri)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "%s\n", psJson)
 

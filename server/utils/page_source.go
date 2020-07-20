@@ -5,5 +5,5 @@ func GetSourceUri(id string) string {
 }
 
 func GetFilePath(id string) string {
-	return "app/files/" + id + ".html"
+	return "server/files/" + id + ".html"
 }

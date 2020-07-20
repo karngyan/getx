@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/karngyan/getx/app"
+	"github.com/karngyan/getx/server"
 )
 
 func main() {
-	app.StartApp()
+	server.StartApp()
 }

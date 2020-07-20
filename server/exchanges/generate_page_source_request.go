@@ -2,7 +2,7 @@ package exchanges
 
 import (
 	"fmt"
-	"github.com/karngyan/getx/app/models"
+	"github.com/karngyan/getx/server/models"
 )
 
 type GeneratePageSourceRequest struct {
