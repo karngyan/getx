@@ -12,13 +12,27 @@ a go routine at the same time which retries fetching the webpage every hour usin
 - [x] fetch html by url and dump it to a file
 - [x] retry go routine
 - [ ] implement persistent queue
-- [ ] frontend
+- [x] frontend
 
 
 
 ## run
 
 `go run main.go`
+
+`yarn start` or `npm run start`
+
+Visit: `http://localhost:3000`
+
+## screenshots
+
+<p align="center">
+    <img alt="Screenshot 0" src="./screenshots/ss_0.png" width="40%"/>
+    <img alt="Screenshot 1" src="./screenshots/ss_1.png" width="40%"/>
+</p>
+
+## api
+
 
 - Once the server is on, try the following request: 
 - /pagesource 
@@ -57,6 +71,4 @@ curl --location --request POST 'http://localhost:7771/pagesource' \
  ## todo
  
  - Persistent queue
- - Frontend
- 
- 
+ - Host it may be?
