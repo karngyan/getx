@@ -20,6 +20,8 @@ a go routine at the same time which retries fetching the webpage every hour usin
 
 `go run main.go`
 
+cd into client directory and run
+
 `yarn start` or `npm run start`
 
 Visit: `http://localhost:3000`
